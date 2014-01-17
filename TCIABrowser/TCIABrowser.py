@@ -54,7 +54,6 @@ class TCIABrowserWidget:
       
 
     # setup API key
-    self.slicerApiKey = '2a38f167-95f1-4f03-99c1-0bc45472d64a'
     self.tciaBrowserModuleDirectoryPath = slicer.modules.tciabrowser.path.replace("TCIABrowser.py","")
     item = qt.QStandardItem()
 
@@ -220,16 +219,18 @@ class TCIABrowserWidget:
     #
     # API Settings Table
     #
-    self.apiSettingsTableWidget = qt.QTableWidget()
-    self.apiSettingsTableWidget.setColumnCount(2)
+    self.apiTableWidget = qt.QTableWidget()
+    self.apiTableWidget.setColumnCount(2)
     self.apiSettingsTableHeaderLabels = ['API Name', 'API Key']
-    self.apiSettingsTableWidget.setHorizontalHeaderLabels(self.apiSettingsTableHeaderLabels)
-    apiSettingsFormLayout.addWidget(self.apiSettingsTableWidget)
-    self.apiSettingsTableWidget.setSelectionBehavior(abstractItemView.SelectRows) 
-    apiSettingsTableWidgetHeader = self.apiSettingsTableWidget.horizontalHeader()
-    apiSettingsTableWidgetHeader.setStretchLastSection(True)
-    apiSettingsVerticalheader = self.seriesTableWidget.verticalHeader()
+    self.apiTableWidget.setHorizontalHeaderLabels(self.apiSettingsTableHeaderLabels)
+    apiSettingsFormLayout.addWidget(self.apiTableWidget)
+    self.apiTableWidget.setSelectionBehavior(abstractItemView.SelectRows) 
+    apiTableWidgetHeader = self.apiTableWidget.horizontalHeader()
+    apiTableWidgetHeader.setStretchLastSection(True)
+    apiSettingsVerticalheader = self.apiTableWidget.verticalHeader()
     apiSettingsVerticalheader.setDefaultSectionSize(20)
+
+    self.populateApiTableWidget()
 
     #
     # API Settings Buttons
@@ -252,13 +253,51 @@ class TCIABrowserWidget:
     self.seriesTableWidget.connect('cellClicked(int,int)',self.seriesSelected)
     self.connectButton.connect('clicked(bool)', self.onConnectButton)
     self.loadButton.connect('clicked(bool)', self.onLoadButton)
+    self.apiTableWidget.connect('cellClicked(int,int)',self.apiSelected)
+    self.apiTableWidget.connect('cellChanged(int,int)', self.apiItemChanged)
+    self.addApiButton.connect('clicked(bool)', self.onAddApiButton)
+    self.removeApiButton.connect('clicked(bool)', self.onRemoveApiButton)
 
     # Add vertical spacer
     self.layout.addStretch(1)
 
   def cleanup(self):
     pass
- 
+
+  def populateApiTableWidget(self):
+    # number of rows
+    self.userApiNameList = []
+    self.userApiKeys = []
+    settings = qt.QSettings()
+    settings.beginGroup("User-APIs")
+    userApiNames = settings.childKeys()
+    userApiCount = len(userApiNames)
+    self.apiTableWidget.setRowCount(1+userApiCount)
+    # From ini file read user keys set number of rows and populate the table
+    self.slicerApiKey = '2a38f167-95f1-4f03-99c1-0bc45472d64a'
+    self.slicerApiNameTableWidgetItem = qt.QTableWidgetItem('Slicer-API')
+    self.slicerApiKeyTableWidgetItem = qt.QTableWidgetItem(str(self.slicerApiKey))
+    self.apiTableWidget.setItem(0,0,self.slicerApiNameTableWidgetItem)
+    self.apiTableWidget.setItem(0,1,self.slicerApiKeyTableWidgetItem)
+    n = 1
+    for userApiName in userApiNames:
+      userApiNameTableWidgetItem = qt.QTableWidgetItem(userApiName)
+      self.userApiNameList.append(userApiNameTableWidgetItem)
+      self.apiTableWidget.setItem(n,0,userApiNameTableWidgetItem)
+      n += 1
+
+  def apiSelected(self,row,column):
+    print 'item selected'
+
+  def apiItemChanged(self,row,column):
+    print 'item changed'
+
+  def onAddApiButton(self):
+    print 'add button'
+
+  def onRemoveApiButton(self):
+    print 'remove button'
+
   def onConnectButton(self):
     logic = TCIABrowserLogic()
     # Instantiate TCIAClient object
